@@ -1,18 +1,18 @@
 module BotAway
   class ParamParser
-    attr_reader :params, :ip, :authenticity_token
+    attr_reader :params, :ip, :authenticity_token, :controller, :action
 
-    def initialize(ip, params, authenticity_token = nil)
+    def initialize(ip, params, controller, action, authenticity_token = nil)
       params = params.with_indifferent_access if !params.kind_of?(HashWithIndifferentAccess)
       authenticity_token ||= params[:authenticity_token]
-      @ip, @params, @authenticity_token = ip, params, authenticity_token
-      
+      @ip, @params, @authenticity_token, @controller, @action = ip, params, authenticity_token, controller, action
+
       if BotAway.dump_params
         Rails.logger.debug("[BotAway] IP: #{@ip}")
         Rails.logger.debug("[BotAway] Authenticity token: #{@authenticity_token}")
         Rails.logger.debug("[BotAway] Parameters: #{params.inspect}")
       end
-      
+
       if authenticity_token
         if catch(:bastard) { deobfuscate! } == :took_the_bait
           # don't clear the controller or action keys, as Rails 3 needs them
@@ -23,12 +23,13 @@ module BotAway
     end
 
     def deobfuscate!(current = params, object_name = nil)
-      return current if BotAway.excluded?(:controller => params[:controller], :action => params[:action])
-      
+      puts "xxx #{controller} #{action}"
+      return current if BotAway.excluded?(:controller => controller, :action => action)
+
       if object_name
         spinner = BotAway::Spinner.new(ip, object_name, authenticity_token)
       end
-      
+
       current.each do |key, value|
         if value.kind_of?(Hash)
           deobfuscate!(value, object_name ? "#{object_name}[#{key}]" : key)
