@@ -23,7 +23,6 @@ module BotAway
     end
 
     def deobfuscate!(current = params, object_name = nil)
-      puts "xxx #{controller} #{action}"
       return current if BotAway.excluded?(:controller => controller, :action => action)
 
       if object_name
